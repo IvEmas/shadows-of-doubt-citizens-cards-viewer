@@ -32,7 +32,7 @@ function ColorDot({rgb, color, label,}: {rgb?: number[] | null; color?: string |
    if (!backgroundColor) {return <span className="colorDot colorDotPlaceholder" aria-label={label} />;}
     return (<span className="colorDot" aria-label={label} style={{ backgroundColor }} title={label}/>
   );
-}
+}//fix
 
 export function CitizenCard({ citizen, visible }: Props) {
   const hairLabel = buildHairLabel(citizen);
@@ -59,7 +59,7 @@ export function CitizenCard({ citizen, visible }: Props) {
         </div>
       </div>
 
-      <section className="sectionBlock compactSection">
+      <section className="sectionBlock compactSection"> 
         <div className="infoGrid compactInfoGrid">
           <InfoRow label={<>Eye{' '} <ColorDot color={citizen.appearance.eye?.name?.toLowerCase() ?? null} label="Eye color"/></>} value={citizen.appearance.eye?.name}/>
           <InfoRow label="Shoe" value={citizen.personal.shoe_size} />
@@ -104,5 +104,5 @@ export function CitizenCard({ citizen, visible }: Props) {
         </section>
       ) : null}
     </article>
-  );
+  );//fix
 }

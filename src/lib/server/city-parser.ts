@@ -231,7 +231,7 @@ function extractHairInfo(citizen: RawRecord) {
     color_rgb: hairRgb ? [...hairRgb] : null,
     color_hex: rgbToHex(hairRgb),
     color_name: classifyGameColor(hairRgb),
-  };
+  };//fix
 }
 
 function extractEyeInfo(citizen: RawRecord) {
