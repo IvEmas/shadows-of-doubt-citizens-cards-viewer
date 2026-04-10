@@ -4,6 +4,10 @@ A small application on **Next.js** for loading and viewing citizen data from gam
 # Citizens Cards Viewer
 Небольшое приложение на **Next.js** для загрузки и просмотра данных граждан из файлов игры в формате `.citb`, `.cit` или уже подготовленного `.json`.
 
+Сркриншоты: 
+<img width="1717" height="1275" alt="image" src="https://github.com/user-attachments/assets/c8c5f446-3854-4d4b-8b95-a003bcbfcf62" />
+<img width="1719" height="1270" alt="image" src="https://github.com/user-attachments/assets/785b258e-f2c4-431e-b6d9-ba8f2ab17fa5" />
+
 Проект позволяет:
 - загружать файл города через интерфейс
 - распаковывать `.citb -> .cit`
