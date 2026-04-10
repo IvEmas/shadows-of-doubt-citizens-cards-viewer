@@ -77,4 +77,9 @@ A small application on **Next.js** for loading and viewing citizen data from gam
 
 ```bash
 npm install
+```
+
+Запуск:
+```bash
 npm run dev
+```
