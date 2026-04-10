@@ -1,5 +1,7 @@
-# Citizens Cards Viewer
+# shadows-of-doubt-citizens-cards-viewer
+A small application on **Next.js** for loading and viewing citizen data from game files in `.citb`, `.cit` or a prepared `.json` format.
 
+# Citizens Cards Viewer
 Небольшое приложение на **Next.js** для загрузки и просмотра данных граждан из файлов игры в формате `.citb`, `.cit` или уже подготовленного `.json`.
 
 Проект позволяет:
