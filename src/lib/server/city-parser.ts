@@ -387,17 +387,28 @@ export function parseCityObject(data: RawRecord): CitizensPayload {
   };
 }
 
+function normalizeCityJsonText(rawText: string): string {
+  return rawText
+    .replace(/\bNaN\b/g, 'null')
+    .replace(/\b-Infinity\b/g, 'null')
+    .replace(/\bInfinity\b/g, 'null');
+}
+
 export function parseCityBuffer(fileBuffer: Buffer, fileName: string): CitizensPayload {
   const lowerName = fileName.toLowerCase();
 
   if (lowerName.endsWith('.json')) {
-    return JSON.parse(fileBuffer.toString('utf-8')) as CitizensPayload;
+    const rawText = fileBuffer.toString('utf-8');
+    return JSON.parse(normalizeCityJsonText(rawText)) as CitizensPayload;
   }
 
   const cityBuffer = lowerName.endsWith('.citb')
     ? brotliDecompressSync(fileBuffer.subarray(0, Math.max(0, fileBuffer.length - 4)))
     : fileBuffer;
 
-  const rawData = JSON.parse(cityBuffer.toString('utf-8')) as RawRecord;
+  const rawText = cityBuffer.toString('utf-8');
+  const normalizedText = normalizeCityJsonText(rawText);
+
+  const rawData = JSON.parse(normalizedText) as RawRecord;
   return parseCityObject(rawData);
 }
