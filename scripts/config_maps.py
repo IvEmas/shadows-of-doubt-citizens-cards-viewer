@@ -49,7 +49,6 @@ EXACT_COLOR_MAP = {
     (134, 134, 134): "gray",
     (152, 127, 77): "ginger",
     (158, 132, 79): "ginger",
-    (119, 18, 18): "red",
 }
 
 COLOR_RANGES = {

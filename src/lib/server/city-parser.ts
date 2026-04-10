@@ -236,13 +236,14 @@ function extractHairInfo(citizen: RawRecord) {
 
 function extractEyeInfo(citizen: RawRecord) {
   const eyeCode = safeGet(citizen, 'descriptors', 'eyeColour');
-
+  const eyeName =
+    eyeCode !== null ? EYE_COLOR_CODE_MAP[eyeCode] ?? `Code ${eyeCode}` : null;
   return {
     code: eyeCode,
     name: eyeCode !== null ? EYE_COLOR_CODE_MAP[eyeCode] ?? `Code ${eyeCode}` : null,
     rgb: null,
-    hex: null,
-    nearest_name: null,
+    hex: eyeName,
+    nearest_name: eyeName,
   };
 }
 

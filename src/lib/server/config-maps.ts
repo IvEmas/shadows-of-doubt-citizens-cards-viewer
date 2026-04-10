@@ -78,8 +78,8 @@ export const COLOR_RANGES: Record<string, ColorRangeRule> = {
   },
   brown: {
     r: [60, 170],
-    g: [30, 110],
-    b: [0, 80],
+    g: [30, 129],
+    b: [0, 81],
   },
   blonde: {
     r: [170, 255],
@@ -92,9 +92,19 @@ export const COLOR_RANGES: Record<string, ColorRangeRule> = {
     b: [0, 90],
   },
   red: {
-    r: [140, 255],
+    r: [110, 255],
     g: [0, 90],
     b: [0, 90],
+  },
+  blue: {
+    r: [0, 120],
+    g: [0, 189],
+    b: [120, 255],
+  },
+  Green: {
+    r: [0, 140],
+    g: [90, 255],
+    b: [0, 140],
   },
   pink: {
     r: [180, 255],
@@ -103,7 +113,7 @@ export const COLOR_RANGES: Record<string, ColorRangeRule> = {
     rb_diff_max: 90,
   },
   purple: {
-    r: [90, 200],
+    r: [77, 200],
     g: [0, 140],
     b: [90, 255],
   },

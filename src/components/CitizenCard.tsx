@@ -27,9 +27,11 @@ function buildHairLabel(citizen: CitizenCardType): string | null {
   return [typeName, colorName].filter(Boolean).join(' · ');
 }
 
-function ColorDot({ rgb, label }: { rgb: number[] | null | undefined; label: string }) {
-  if (!rgb || rgb.length < 3) return <span className="colorDot colorDotPlaceholder" aria-label={label} />;
-  return <span className="colorDot" aria-label={label} style={{ backgroundColor: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})` }} />;
+function ColorDot({rgb, color, label,}: {rgb?: number[] | null; color?: string | null; label: string;}) {
+   const backgroundColor = rgb && rgb.length >= 3? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`: color ?? null;
+   if (!backgroundColor) {return <span className="colorDot colorDotPlaceholder" aria-label={label} />;}
+    return (<span className="colorDot" aria-label={label} style={{ backgroundColor }} title={label}/>
+  );
 }
 
 export function CitizenCard({ citizen, visible }: Props) {
@@ -59,7 +61,7 @@ export function CitizenCard({ citizen, visible }: Props) {
 
       <section className="sectionBlock compactSection">
         <div className="infoGrid compactInfoGrid">
-          <InfoRow label={<>Eye <ColorDot rgb={citizen.appearance.eye?.rgb} label="Eye color" /></>} value={citizen.appearance.eye?.name} />
+          <InfoRow label={<>Eye{' '} <ColorDot color={citizen.appearance.eye?.name?.toLowerCase() ?? null} label="Eye color"/></>} value={citizen.appearance.eye?.name}/>
           <InfoRow label="Shoe" value={citizen.personal.shoe_size} />
           <InfoRow
             label={<>Hair <ColorDot rgb={citizen.appearance.hair?.color_rgb} label="Hair color" /></>}
