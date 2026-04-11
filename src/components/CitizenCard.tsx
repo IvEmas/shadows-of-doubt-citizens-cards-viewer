@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { CitizenCard as CitizenCardType, VisibilitySettings } from '@/lib/types';
 
 type Props = {
@@ -34,7 +36,7 @@ function ColorDot({rgb, color, label,}: {rgb?: number[] | null; color?: string |
   );
 }//fix
 
-export function CitizenCard({ citizen, visible }: Props) {
+function CitizenCardComponent({ citizen, visible }: Props) {
   const hairLabel = buildHairLabel(citizen);
   const hasPassword = citizen.security.password;
   const addressValue = visible.showHome ? citizen.home.name : '***';
@@ -106,3 +108,5 @@ export function CitizenCard({ citizen, visible }: Props) {
     </article>
   );//fix
 }
+
+export const CitizenCard = memo(CitizenCardComponent);

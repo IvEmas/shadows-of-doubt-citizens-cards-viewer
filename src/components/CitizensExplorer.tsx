@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CitizenCard } from '@/components/CitizenCard';
 import { FieldToggles } from '@/components/FieldToggles';
@@ -27,6 +27,8 @@ const DEFAULT_FILTERS: CitizenFilters = {
 };
 
 const VISIBILITY_STORAGE_KEY = 'citizens-visibility';
+const INITIAL_RENDER_COUNT = 120;
+const RENDER_STEP = 120;
 
 type Props = {
   data: CitizensPayload;
@@ -59,6 +61,9 @@ export function CitizensExplorer({ data: initialData }: Props) {
   const [visibility, setVisibility] = useState<VisibilitySettings>(DEFAULT_VISIBILITY);
   const [uploadState, setUploadState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
+  const [renderCount, setRenderCount] = useState(INITIAL_RENDER_COUNT);
+  const cardsListRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
@@ -78,7 +83,19 @@ export function CitizensExplorer({ data: initialData }: Props) {
   }, [visibility]);
 
   const filterOptions = useMemo(() => buildFilterOptions(data.citizens), [data.citizens]);
-  const filteredCitizens = useMemo(() => filterCitizens(data.citizens, filters), [data.citizens, filters]);
+  const sortedCitizensById = useMemo(
+    () => data.citizens.toSorted((a, b) => (a.id ?? Number.MAX_SAFE_INTEGER) - (b.id ?? Number.MAX_SAFE_INTEGER)),
+    [data.citizens],
+  );
+  const sortedCitizensByName = useMemo(() => data.citizens.toSorted((a, b) => a.name.full.localeCompare(b.name.full)), [data.citizens]);
+  const deferredFilters = useDeferredValue(filters);
+  const baseCitizens = useMemo(
+    () => (deferredFilters.sortBy === 'name' ? sortedCitizensByName : sortedCitizensById),
+    [deferredFilters.sortBy, sortedCitizensById, sortedCitizensByName],
+  );
+  const filteredCitizens = useMemo(() => filterCitizens(baseCitizens, deferredFilters), [baseCitizens, deferredFilters]);
+  const visibleCitizens = useMemo(() => filteredCitizens.slice(0, renderCount), [filteredCitizens, renderCount]);
+  const hasMoreCitizens = visibleCitizens.length < filteredCitizens.length;
   const availableAdvancedFields = useMemo(
     () => ADVANCED_OPTIONS.filter((option) => !filters.advanced.some((item) => item.field === option.value)),
     [filters.advanced],
@@ -87,6 +104,39 @@ export function CitizensExplorer({ data: initialData }: Props) {
   const hasData = data.citizens.length > 0;
   const shouldShowPopulation = data.meta.population > 0;
   const shouldShowCards = data.meta.citizens_count > 0 && data.meta.citizens_count !== data.meta.population;
+
+  useEffect(() => {
+    setRenderCount(INITIAL_RENDER_COUNT);
+  }, [deferredFilters, data.citizens]);
+
+  useEffect(() => {
+    if (!hasMoreCitizens) {
+      return;
+    }
+
+    const node = loadMoreRef.current;
+    if (!node || !cardsListRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setRenderCount((current) => Math.min(current + RENDER_STEP, filteredCitizens.length));
+      },
+      {
+        root: cardsListRef.current,
+        rootMargin: '250px',
+      },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMoreCitizens, filteredCitizens.length]);
 
   async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -299,6 +349,7 @@ export function CitizensExplorer({ data: initialData }: Props) {
             </button>
             <div className="resultsHint">
               Found: <strong>{filteredCitizens.length}</strong>
+              {filteredCitizens.length > INITIAL_RENDER_COUNT ? ` · Visible: ${visibleCitizens.length}` : ''}
             </div>
           </div>
         </div>
@@ -306,10 +357,11 @@ export function CitizensExplorer({ data: initialData }: Props) {
 
       <main className="contentArea">
         {hasData ? (
-          <div className="cardsList cardsGrid">
-            {filteredCitizens.map((citizen) => (
+          <div ref={cardsListRef} className="cardsList cardsGrid">
+            {visibleCitizens.map((citizen) => (
               <CitizenCard key={`${citizen.id}-${citizen.name.full}`} citizen={citizen} visible={visibility} />
             ))}
+            {hasMoreCitizens ? <div ref={loadMoreRef} className="listLoadSentinel" aria-hidden="true" /> : null}
           </div>
         ) : (
           <div className="emptyStateCard">

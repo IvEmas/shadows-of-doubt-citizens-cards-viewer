@@ -8,25 +8,62 @@ function safeString(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+type CitizenSearchFields = ReturnType<typeof citizenSearchFields>;
+
+type PreparedFilters = {
+  query: string;
+  searchMode: CitizenFilters['searchMode'];
+  gender: string;
+  heightCategory: string;
+  exactHeight: number | null;
+  exactWeight: number | null;
+  advanced: Array<{ field: AdvancedFilterField; value: string }>;
+};
+
+function parseExactNumber(filterValue: string): number | null {
+  if (!filterValue.trim()) {
+    return null;
+  }
+
+  const parsed = Number(filterValue.trim());
+  if (Number.isNaN(parsed)) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function prepareFilters(filters: CitizenFilters): PreparedFilters {
+  return {
+    query: normalizeText(filters.query),
+    searchMode: filters.searchMode,
+    gender: normalizeText(filters.gender),
+    heightCategory: normalizeText(filters.heightCategory),
+    exactHeight: parseExactNumber(filters.exactHeight),
+    exactWeight: parseExactNumber(filters.exactWeight),
+    advanced: filters.advanced
+      .map((item) => ({
+        field: item.field,
+        value: normalizeText(item.value),
+      }))
+      .filter((item) => Boolean(item.value)),
+  };
+}
+
 function matchesSelect(filterValue: string, citizenValue: string | null | undefined): boolean {
   if (!filterValue) {
     return true;
   }
 
-  return normalizeText(citizenValue ?? '') === normalizeText(filterValue);
+  return normalizeText(citizenValue ?? '') === filterValue;
 }
 
-function matchesExactNumber(filterValue: string, citizenValue: number | null | undefined): boolean {
-  if (!filterValue.trim()) {
+function matchesExactNumber(filterValue: number | null, citizenValue: number | null | undefined): boolean {
+  if (filterValue === null) {
     return true;
   }
 
-  const parsed = Number(filterValue.trim());
-  if (Number.isNaN(parsed)) {
-    return true;
-  }
-
-  return citizenValue === parsed;
+  return citizenValue === filterValue;
 }
 
 function joinSearchParts(parts: Array<string | number | null | undefined>): string {
@@ -74,68 +111,63 @@ function citizenSearchFields(citizen: CitizenCard) {
   };
 }
 
-function matchesSearch(citizen: CitizenCard, filters: CitizenFilters): boolean {
-  const normalizedQuery = normalizeText(filters.query);
-  if (!normalizedQuery) {
+function matchesSearch(fields: CitizenSearchFields, filters: PreparedFilters): boolean {
+  if (!filters.query) {
     return true;
   }
-
-  const fields = citizenSearchFields(citizen);
 
   if (filters.searchMode === 'id') {
-    return fields.id === normalizedQuery;
+    return fields.id === filters.query;
   }
 
-  return fields[filters.searchMode].includes(normalizedQuery);
-}
-
-function matchesAdvancedField(citizen: CitizenCard, field: AdvancedFilterField, value: string): boolean {
-  if (!value.trim()) {
-    return true;
-  }
-
-  const normalized = normalizeText(value);
-  const fields = citizenSearchFields(citizen);
-  return fields[field].includes(normalized);
+  return fields[filters.searchMode].includes(filters.query);
 }
 
 export function filterCitizens(citizens: CitizenCard[], filters: CitizenFilters): CitizenCard[] {
-  const filtered = citizens.filter((citizen) => {
-    if (!matchesSearch(citizen, filters)) {
+  const preparedFilters = prepareFilters(filters);
+  const needsSearchFields = Boolean(preparedFilters.query) || preparedFilters.advanced.length > 0;
+
+  return citizens.filter((citizen) => {
+    let fields: CitizenSearchFields | null = null;
+    const getFields = () => {
+      if (!fields) {
+        fields = citizenSearchFields(citizen);
+      }
+      return fields;
+    };
+
+    if (needsSearchFields && !matchesSearch(getFields(), preparedFilters)) {
       return false;
     }
 
-    if (!matchesSelect(filters.gender, citizen.personal.gender)) {
+    if (!matchesSelect(preparedFilters.gender, citizen.personal.gender)) {
       return false;
     }
 
-    if (!matchesSelect(filters.heightCategory, citizen.personal.height_category)) {
+    if (!matchesSelect(preparedFilters.heightCategory, citizen.personal.height_category)) {
       return false;
     }
 
-    if (!matchesExactNumber(filters.exactHeight, citizen.personal.height_cm)) {
+    if (!matchesExactNumber(preparedFilters.exactHeight, citizen.personal.height_cm)) {
       return false;
     }
 
-    if (!matchesExactNumber(filters.exactWeight, citizen.personal.weight_kg)) {
+    if (!matchesExactNumber(preparedFilters.exactWeight, citizen.personal.weight_kg)) {
       return false;
     }
 
-    for (const item of filters.advanced) {
-      if (!matchesAdvancedField(citizen, item.field, item.value)) {
+    if (!preparedFilters.advanced.length) {
+      return true;
+    }
+
+    const searchableFields = getFields();
+    for (const item of preparedFilters.advanced) {
+      if (!searchableFields[item.field].includes(item.value)) {
         return false;
       }
     }
 
     return true;
-  });
-
-  return filtered.toSorted((a, b) => {
-    if (filters.sortBy === 'name') {
-      return safeString(a.name.full).localeCompare(safeString(b.name.full));
-    }
-
-    return (a.id ?? Number.MAX_SAFE_INTEGER) - (b.id ?? Number.MAX_SAFE_INTEGER);
   });
 }
 

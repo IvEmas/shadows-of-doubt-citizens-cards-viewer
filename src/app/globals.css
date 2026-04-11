@@ -1072,3 +1072,13 @@ select {
 .loadToolbarHeader { align-items:center; margin-bottom:0; }
 .compactUploadButton { min-height:32px; border-radius:12px; }
 .advancedFiltersList { display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; padding-right:4px; }
+
+.listLoadSentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.citizenCard {
+  content-visibility: auto;
+  contain-intrinsic-size: 420px;
+}
